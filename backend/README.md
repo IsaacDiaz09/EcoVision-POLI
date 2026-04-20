@@ -54,6 +54,7 @@ Cliente (Angular / móvil)
 - **[Firebase Admin SDK](https://firebase.google.com/docs/admin/setup)** — autenticación (Auth) y base de datos (Firestore)
 - **[Roboflow](https://docs.roboflow.com)** — API de visión por computadora para clasificación de residuos
 - **Google Application Default Credentials (ADC)** — autenticación con Google Cloud sin credenciales explícitas
+- **[secure](https://github.com/TypeError/secure)** — cabeceras de seguridad HTTP (HSTS, CSP, X-Frame-Options, etc.)
 - **Pydantic v2** — validación de datos y schemas de request/response
 - **Uvicorn** — servidor ASGI de alto rendimiento
 
@@ -64,13 +65,13 @@ Cliente (Angular / móvil)
 ```
 backend/
 ├── app/
-│   ├── main.py                        # Punto de entrada: app FastAPI, middlewares y routers
+│   ├── main.py                        # Punto de entrada: app FastAPI, middlewares, cabeceras de seguridad y routers
 │   ├── core/
 │   │   ├── config.py                  # Variables de entorno con pydantic-settings
 │   │   └── firebase.py                # Inicialización de Firebase con ADC
 │   ├── middleware/
 │   │   ├── auth_middleware.py         # Interceptor: verifica token Firebase (todos los endpoints)
-│   │   └── exception_middleware.py   # Interceptor: manejo global de excepciones → JSON uniforme
+│   │   └── exception_middleware.py    # Interceptor: manejo global de excepciones → JSON uniforme
 │   ├── api/
 │   │   └── v1/
 │   │       ├── router.py              # Agrega los routers con prefijo /api/v1
@@ -85,7 +86,7 @@ backend/
 │   │   ├── firebase_client.py         # Auth + Firestore
 │   │   └── roboflow_client.py         # API de clasificación
 │   └── schemas/                       # Modelos Pydantic
-│       ├── common.py                  # Envelope ApiResponse uniforme
+│       ├── common.py                  # ApiResponse y ApiErrorResponse
 │       ├── user.py
 │       ├── classification.py
 │       └── history.py
@@ -98,28 +99,141 @@ backend/
 
 ## Endpoints
 
-> Todos los endpoints retornan JSON con el siguiente envelope:
-> ```json
-> { "success": true, "data": { ... }, "message": "OK" }
-> ```
+**Formato de respuesta exitosa:**
+```json
+{ "data": { ... } }
+```
 
-| Método | Ruta | Auth | Descripción |
-|--------|------|:----:|-------------|
-| `POST` | `/api/v1/users` | — | Registra un nuevo usuario en Firebase Auth |
-| `GET` | `/api/v1/users` | ✓ | Lista todos los usuarios registrados |
-| `GET` | `/api/v1/users/{uid}` | ✓ | Retorna el perfil de un usuario por UID |
-| `POST` | `/api/v1/classification` | ✓ | Clasifica un residuo y guarda el resultado en Firestore |
-| `GET` | `/api/v1/history/{id_user}` | ✓ | Retorna el historial cronológico de clasificaciones |
+**Formato de respuesta de error:**
+```json
+{ "message": "Descripción del error.", "error_code": "ERROR_CODE" }
+```
 
 **Autenticación:** header `Authorization: Bearer <firebase_id_token>` (excepto `POST /api/v1/users`).
 
-**`POST /api/v1/classification`** recibe `multipart/form-data`:
+---
+
+### Usuarios
+
+#### `POST /api/v1/users` — Registro de usuario
+Crea una nueva cuenta en Firebase Auth. No requiere autenticación.
+
+**Request:**
+```json
+{
+  "email": "usuario@ejemplo.com",
+  "password": "contraseña123",
+  "display_name": "Nombre Opcional"
+}
+```
+
+**Response** `201`:
+```json
+{
+  "data": {
+    "uid": "abc123",
+    "email": "usuario@ejemplo.com",
+    "display_name": "Nombre Opcional",
+    "email_verified": false,
+    "disabled": false,
+    "created_at": "2026-04-19T23:00:00+00:00"
+  }
+}
+```
+
+---
+
+#### `GET /api/v1/users` — Listado de usuarios
+Retorna todos los usuarios registrados en Firebase Auth.
+
+**Response** `200`:
+```json
+{
+  "data": [
+    {
+      "uid": "abc123",
+      "email": "usuario@ejemplo.com",
+      "display_name": "Nombre",
+      "email_verified": false,
+      "disabled": false,
+      "created_at": "2026-04-19T23:00:00+00:00"
+    }
+  ]
+}
+```
+
+---
+
+#### `GET /api/v1/users/{uid}` — Consulta de usuario
+Retorna el perfil de un usuario por su UID de Firebase.
+
+**Response** `200`:
+```json
+{
+  "data": {
+    "uid": "abc123",
+    "email": "usuario@ejemplo.com",
+    "display_name": "Nombre",
+    "email_verified": false,
+    "disabled": false,
+    "created_at": "2026-04-19T23:00:00+00:00"
+  }
+}
+```
+
+---
+
+### Clasificación
+
+#### `POST /api/v1/classification` — Clasificación de residuo
+Recibe una imagen, la clasifica mediante Roboflow y guarda el resultado en Firestore.
+
+> Recibe `multipart/form-data` (excepción al formato JSON general del servicio).
+
 | Campo | Tipo | Requerido | Descripción |
 |-------|------|:---------:|-------------|
 | `file` | imagen (jpg/png/webp) | ✓ | Foto del residuo |
-| `location` | string | — | Ubicación opcional del contenedor |
+| `location` | string | — | Ubicación donde se depositó el residuo |
 
-**Documentación interactiva:** `http://localhost:8000/docs`
+**Response** `200`:
+```json
+{
+  "data": {
+    "waste_type": "metal",
+    "confidence": 0.977,
+    "recommendations": [
+      "Deposita en el contenedor amarillo.",
+      "Aplana las latas para ahorrar espacio."
+    ]
+  }
+}
+```
+
+---
+
+### Historial
+
+#### `GET /api/v1/history/{id_user}` — Historial de clasificaciones
+Retorna el historial cronológico de clasificaciones de un usuario, ordenado del más reciente al más antiguo.
+
+**Response** `200`:
+```json
+{
+  "data": {
+    "user_id": "abc123",
+    "total": 1,
+    "entries": [
+      {
+        "id": "He5tGYrOXHcF0wZkDP9X",
+        "waste_type": "metal",
+        "confidence": 0.977,
+        "location": "Bogotá",
+        "timestamp": "2026-04-19T23:53:30+00:00"
+      }
+    ]
+  }
+}
+```
 
 ---
 
@@ -127,6 +241,7 @@ backend/
 
 - Python 3.11+
 - Proyecto en [Firebase](https://console.firebase.google.com) con **Authentication** y **Firestore** habilitados
+- Índice compuesto en Firestore sobre la colección `classifications` con los campos `user_id` (ASC) y `timestamp` (DESC)
 - Cuenta en [Roboflow](https://roboflow.com) con un modelo de detección de residuos
 - [Google Cloud CLI](https://cloud.google.com/sdk/docs/install) (para desarrollo local con ADC)
 
@@ -194,7 +309,6 @@ Swagger UI disponible en: **http://localhost:8000/docs**
 ### Cloud Run
 
 ```bash
-# Desde la raíz del proyecto backend
 gcloud run deploy ecovision-api \
   --source . \
   --project=tu-firebase-project-id \
@@ -203,4 +317,4 @@ gcloud run deploy ecovision-api \
   --set-env-vars FIREBASE_PROJECT_ID=tu-firebase-project-id,ROBOFLOW_API_KEY=...,ROBOFLOW_PROJECT=...,ROBOFLOW_VERSION=1
 ```
 
-El Service Account de Cloud Run hereda automáticamente los permisos de Firebase y Firestore asignados al proyecto — no se requiere `serviceAccountKey.json`.
+El Service Account de Cloud Run hereda automáticamente los permisos de Firebase y Firestore — no se requiere `serviceAccountKey.json`.
