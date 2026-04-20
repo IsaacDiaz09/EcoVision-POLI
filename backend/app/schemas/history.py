@@ -3,7 +3,6 @@ from pydantic import BaseModel
 
 class HistoryEntry(BaseModel):
     id: str
-    user_id: str
     waste_type: str
     confidence: float
     location: str | None

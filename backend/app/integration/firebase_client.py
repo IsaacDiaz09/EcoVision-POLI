@@ -96,7 +96,6 @@ def _to_history_entry(doc) -> HistoryEntry:
     timestamp_str = ts.isoformat() if hasattr(ts, "isoformat") else str(ts)
     return HistoryEntry(
         id=doc.id,
-        user_id=data.get("user_id", ""),
         waste_type=data.get("waste_type", ""),
         confidence=float(data.get("confidence", 0.0)),
         location=data.get("location"),
