@@ -32,6 +32,9 @@ application_default_credentials.json
 # Logs
 *.log
 
+# App Engine (contiene credenciales en env_variables)
+app.yaml
+
 # Claude Code
 .claude/
 CLAUDE.md

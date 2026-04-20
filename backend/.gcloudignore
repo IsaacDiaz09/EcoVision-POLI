@@ -1,0 +1,13 @@
+.git
+.gitignore
+.gcloudignore
+.venv
+venv
+__pycache__
+*.py[cod]
+*.pyo
+.env
+serviceAccountKey.json
+*.json.secret
+.DS_Store
+README.md
