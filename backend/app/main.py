@@ -1,7 +1,8 @@
 import logging
 from typing import Any
 
-from fastapi import FastAPI
+import secure
+from fastapi import FastAPI, Request
 from fastapi.middleware.cors import CORSMiddleware
 from fastapi.openapi.utils import get_openapi
 
@@ -24,7 +25,7 @@ app = FastAPI(
         "**Persistencia:** Firebase Firestore (historial de clasificaciones)."
     ),
     version="1.0.0",
-    contact={"name": "EcoVision Team", "email": "ecovision@politecnico.edu.co"},
+    contact={"name": "EcoVision Team", "email": "idiazppe@poligran.edu.co"},
     license_info={"name": "MIT"},
 )
 
@@ -58,6 +59,25 @@ def custom_openapi() -> dict[str, Any]:
 
 
 app.openapi = custom_openapi
+
+# ── Secure headers ────────────────────────────────────────────────────────────
+_secure_headers = secure.Secure(
+    hsts=secure.StrictTransportSecurity(),
+    xfo=secure.XFrameOptions(),
+    xcto=secure.XContentTypeOptions(),
+    referrer=secure.ReferrerPolicy(),
+    csp=secure.ContentSecurityPolicy(),
+    permissions=secure.PermissionsPolicy(),
+    server=secure.Server(),
+)
+
+
+@app.middleware("http")
+async def set_secure_headers(request: Request, call_next):
+    response = await call_next(request)
+    _secure_headers.set_headers(response)
+    return response
+
 
 # ── Middlewares (se ejecutan en orden inverso al de registro) ─────────────────
 # 1. CORS (más externo)
