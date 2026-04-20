@@ -66,14 +66,6 @@ _secure_headers = secure.Secure(
     xfo=secure.XFrameOptions(),
     xcto=secure.XContentTypeOptions(),
     referrer=secure.ReferrerPolicy(),
-    csp=(
-        secure.ContentSecurityPolicy()
-        .default_src("'self'")
-        .script_src("'self'", "cdn.jsdelivr.net", "'unsafe-inline'")
-        .style_src("'self'", "cdn.jsdelivr.net", "'unsafe-inline'")
-        .img_src("'self'", "data:", "cdn.jsdelivr.net")
-        .font_src("'self'", "cdn.jsdelivr.net")
-    ),
     permissions=secure.PermissionsPolicy(),
     server=secure.Server(),
 )
