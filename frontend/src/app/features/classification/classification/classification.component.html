@@ -1,0 +1,67 @@
+<div class="min-h-screen bg-gray-100 flex flex-col items-center p-6">
+
+  <h1 class="text-3xl font-bold mb-6">
+    Clasificación de residuos ♻️
+  </h1>
+
+  <div class="bg-white p-6 rounded-2xl shadow-lg w-full max-w-md">
+
+
+    <input 
+      type="file" 
+      (change)="onFileSelected($event)"
+      accept="image/*"
+      class="mb-4 w-full"
+    />
+
+
+    <div *ngIf="previewUrl" class="mb-4">
+      <img 
+        [src]="previewUrl" 
+        class="rounded-lg w-full h-64 object-cover"
+      />
+    </div>
+
+
+    <button 
+      (click)="classify()" 
+      [disabled]="loading || !selectedFile"
+      class="w-full bg-green-500 text-white py-2 rounded-lg hover:bg-green-600 transition disabled:bg-gray-400"
+    >
+      {{ loading ? 'Analizando...' : 'Clasificar imagen' }}
+    </button>
+
+
+    <p *ngIf="error" class="text-red-500 mt-4 text-center">
+      {{ error }}
+    </p>
+
+
+    <div *ngIf="result" class="mt-6 text-center">
+
+      <h2 class="text-xl font-semibold mb-2">
+        Resultado
+      </h2>
+
+      <p class="text-lg">
+        Tipo: 
+        <span class="font-bold text-green-600">
+          {{ result.waste_type }}
+        </span>
+      </p>
+
+      <p>
+        Confianza: 
+        {{ (result.confidence * 100) | number:'1.0-2' }}%
+      </p>
+
+      <p>
+        Recomendaciones: 
+        {{ result.recommendations}}
+      </p>
+
+    </div>
+
+  </div>
+
+</div>
