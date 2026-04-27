@@ -41,9 +41,13 @@
 
     <p class="text-sm text-center mt-4">
       ¿No tienes cuenta?
-      <a routerLink="/register" class="text-green-600 font-semibold hover:underline">
-        Regístrate
-      </a>
+    <button
+      type="button"
+      (click)="goToRegister()"
+      class="mt-4 w-full border border-green-500 text-green-600 py-2 rounded-lg hover:bg-green-50 transition"
+    >
+      Registrarse
+    </button>
     </p>
 
   </div>

@@ -38,4 +38,8 @@ export class LoginComponent {
         console.error(err);
       });
   }
+
+  goToRegister() {
+  this.router.navigate(['/register']);
+}
 }

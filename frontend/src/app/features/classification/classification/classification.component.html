@@ -1,66 +1,137 @@
-<div class="min-h-screen bg-gray-100 flex flex-col items-center p-6">
+<div class="min-h-screen flex bg-gray-100">
 
-  <h1 class="text-3xl font-bold mb-6">
-    Clasificación de residuos ♻️
-  </h1>
+  <!-- SIDEBAR -->
+  <aside class="w-64 bg-white shadow-lg hidden md:flex flex-col p-5">
 
-  <div class="bg-white p-6 rounded-2xl shadow-lg w-full max-w-md">
+    <h2 class="text-2xl font-bold text-green-600 mb-8">
+      EcoVision ♻️
+    </h2>
 
+    <nav class="flex flex-col gap-3 text-gray-600">
 
-    <input 
-      type="file" 
-      (change)="onFileSelected($event)"
-      accept="image/*"
-      class="mb-4 w-full"
-    />
+      <div class="flex items-center gap-2 p-2 rounded-lg bg-green-100 text-green-700 font-semibold">
+        📷 Clasificar
+      </div>
 
+      <div class="flex items-center gap-2 p-2 rounded-lg hover:bg-gray-100 cursor-pointer">
+        📊 Historial
+      </div>
 
-    <div *ngIf="previewUrl" class="mb-4">
-      <img 
-        [src]="previewUrl" 
-        class="rounded-lg w-full h-64 object-cover"
-      />
-    </div>
+      <div class="flex items-center gap-2 p-2 rounded-lg hover:bg-gray-100 cursor-pointer">
+        ⚙️ Configuración
+      </div>
 
+    </nav>
 
-    <button 
-      (click)="classify()" 
-      [disabled]="loading || !selectedFile"
-      class="w-full bg-green-500 text-white py-2 rounded-lg hover:bg-green-600 transition disabled:bg-gray-400"
-    >
-      {{ loading ? 'Analizando...' : 'Clasificar imagen' }}
-    </button>
+  </aside>
 
+  <!-- CONTENIDO -->
+  <div class="flex-1 flex flex-col">
 
-    <p *ngIf="error" class="text-red-500 mt-4 text-center">
-      {{ error }}
-    </p>
+    <!-- TOPBAR -->
+    <header class="bg-white shadow-md px-6 py-4 flex justify-between items-center">
 
+      <h1 class="text-xl font-semibold text-gray-700">
+        Clasificación de residuos
+      </h1>
 
-    <div *ngIf="result" class="mt-6 text-center">
+      <div class="flex items-center gap-3">
+        <span class="text-sm text-gray-500"></span>
+        <div class="w-8 h-8 bg-green-500 rounded-full"></div>
+      </div>
 
-      <h2 class="text-xl font-semibold mb-2">
-        Resultado
-      </h2>
+    </header>
 
-      <p class="text-lg">
-        Tipo: 
-        <span class="font-bold text-green-600">
-          {{ result.waste_type }}
-        </span>
-      </p>
+    <!-- MAIN -->
+    <main class="flex-1 flex justify-center items-center p-6">
 
-      <p>
-        Confianza: 
-        {{ (result.confidence * 100) | number:'1.0-2' }}%
-      </p>
+      <!-- TU CARD -->
+      <div class="bg-white shadow-2xl rounded-3xl p-6 w-full max-w-md space-y-6">
 
-      <p>
-        Recomendaciones: 
-        {{ result.recommendations}}
-      </p>
+        <!-- Upload -->
+        <label 
+          class="flex flex-col items-center justify-center border-2 border-dashed border-green-400 rounded-xl p-6 cursor-pointer hover:bg-green-50 transition"
+        >
+          <span class="text-gray-600 text-sm mb-2">
+            Haz clic o arrastra una imagen
+          </span>
 
-    </div>
+          <span class="text-4xl">📷</span>
+
+          <input 
+            type="file"
+            (change)="onFileSelected($event)"
+            accept="image/*"
+            class="hidden"
+          />
+        </label>
+
+        <!-- Preview -->
+        <div *ngIf="previewUrl" class="relative group">
+          <img 
+            [src]="previewUrl"
+            class="rounded-xl w-full h-64 object-cover shadow-md"
+          />
+        </div>
+
+        <!-- Botón -->
+        <button 
+          (click)="classify()"
+          [disabled]="loading || !selectedFile"
+          class="w-full bg-green-500 text-white py-3 rounded-xl font-semibold hover:bg-green-600 transition disabled:bg-gray-400 flex justify-center items-center gap-2"
+        >
+          <span *ngIf="!loading">Clasificar</span>
+
+          <span *ngIf="loading" class="flex items-center gap-2">
+            <span class="animate-spin border-2 border-white border-t-transparent rounded-full w-4 h-4"></span>
+            Analizando...
+          </span>
+        </button>
+
+        <!-- Error -->
+        <p *ngIf="error" class="text-red-500 text-sm text-center">
+          {{ error }}
+        </p>
+
+        <!-- Resultado -->
+        <div *ngIf="result" class="bg-green-50 border border-green-200 rounded-xl p-4 space-y-3">
+
+          <h2 class="text-lg font-bold text-green-700 text-center">
+            Resultado
+          </h2>
+
+          <div class="flex justify-between">
+            <span class="text-gray-600">Tipo:</span>
+            <span class="font-semibold text-green-700">
+              {{ result.waste_type }}
+            </span>
+          </div>
+
+          <div>
+            <div class="flex justify-between text-sm mb-1">
+              <span class="text-gray-600">Confianza</span>
+              <span>
+                {{ (result.confidence * 100) | number:'1.0-2' }}%
+              </span>
+            </div>
+
+            <div class="w-full bg-gray-200 rounded-full h-2">
+              <div 
+                class="bg-green-500 h-2 rounded-full"
+                [style.width.%]="result.confidence * 100"
+              ></div>
+            </div>
+          </div>
+
+          <div class="bg-white p-3 rounded-lg border text-sm text-gray-700">
+           {{ result.recommendations }}
+          </div>
+
+        </div>
+
+      </div>
+
+    </main>
 
   </div>
 

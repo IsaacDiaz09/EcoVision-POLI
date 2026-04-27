@@ -50,10 +50,13 @@
 
     <p class="text-sm text-center mt-4">
       ¿Ya tienes cuenta?
-      <a routerLink="/login" class="text-green-600 font-semibold hover:underline">
-        Inicia sesión
-      </a>
+    
+    <button
+      type="button"
+      (click)="goToLogin()"
+      class="mt-4 w-full border border-green-500 text-green-600 py-2 rounded-lg hover:bg-green-50 transition">
+      Inicia sesión
+    </button>
     </p>
-
   </div>
 </div>
